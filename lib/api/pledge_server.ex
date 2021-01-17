@@ -2,9 +2,9 @@ defmodule Tabby.PledgeServer do
   @name :pledge_server
 
   # Client interface
-  def start do
+  def start(initial_state \\ []) do
     IO.puts "Starting the pledge server..."
-    pid = spawn(__MODULE__, :listen_loop, [[]])
+    pid = spawn(__MODULE__, :listen_loop, [initial_state])
     Process.register(pid, @name)
     pid
   end
@@ -54,20 +54,20 @@ defmodule Tabby.PledgeServer do
   end
 end
 
-alias Tabby.PledgeServer
-
-pid = PledgeServer.start()
-
-send pid, {:stop, "Hammertime"}
-
-IO.inspect PledgeServer.create_pledge("larry", 10)
-IO.inspect PledgeServer.create_pledge("Mark", 20)
-IO.inspect PledgeServer.create_pledge("Jon", 30)
-IO.inspect PledgeServer.create_pledge("Gary", 40)
-IO.inspect PledgeServer.create_pledge("Owen", 50)
-
-IO.inspect PledgeServer.recent_pledges()
-
-IO.inspect PledgeServer.total_pledged()
-
-IO.inspect Process.info(pid, :messages)
+#alias Tabby.PledgeServer
+#
+#pid = PledgeServer.start()
+#
+#send pid, {:stop, "Hammertime"}
+#
+#IO.inspect PledgeServer.create_pledge("larry", 10)
+#IO.inspect PledgeServer.create_pledge("Mark", 20)
+#IO.inspect PledgeServer.create_pledge("Jon", 30)
+#IO.inspect PledgeServer.create_pledge("Gary", 40)
+#IO.inspect PledgeServer.create_pledge("Owen", 50)
+#
+#IO.inspect PledgeServer.recent_pledges()
+#
+#IO.inspect PledgeServer.total_pledged()
+#
+#IO.inspect Process.info(pid, :messages)

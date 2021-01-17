@@ -7,6 +7,7 @@ defmodule Tabby.Handler do
   alias Tabby.Parser
   alias Tabby.Conv
   alias Tabby.BearController
+  alias Tabby.PledgeController
   alias Tabby.VideoCam
   alias Tabby.Tracker
 
@@ -23,11 +24,11 @@ defmodule Tabby.Handler do
   end
 
   def route(%Conv{method: "POST", path: "/pledges"} = conv) do
-    Tabby.PledgeController.create(conv, conv.params)
+    PledgeController.create(conv, conv.params)
   end
 
   def route(%Conv{method: "GET", path: "/pledges"} = conv) do
-    Tabby.PledgeController.index(conv)
+    PledgeController.index(conv)
   end
 
   def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
