@@ -22,8 +22,16 @@ defmodule Tabby.Handler do
     |> format_response
   end
 
+  def route(%Conv{method: "POST", path: "/pledges"} = conv) do
+    Tabby.PledgeController.create(conv, conv.params)
+  end
+
+  def route(%Conv{method: "GET", path: "/pledges"} = conv) do
+    Tabby.PledgeController.index(conv)
+  end
+
   def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
-    task = Task.async(fn -> Tracker.get_location("bigfoot") end)
+    task = Task.async(Tracker, :get_location, ["bigfoot"])
 
     snapshots =
       ["cam-1", "cam-2", "cam-3"]
