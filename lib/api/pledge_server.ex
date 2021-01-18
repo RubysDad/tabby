@@ -1,73 +1,102 @@
 defmodule Tabby.PledgeServer do
   @name :pledge_server
 
+  use GenServer # Server process behaves like other GenServer processes
+
+  defmodule State do
+    defstruct cache_size: 3, pledges: []
+  end
   # Client interface
-  def start(initial_state \\ []) do
+
+  def start do
     IO.puts "Starting the pledge server..."
-    pid = spawn(__MODULE__, :listen_loop, [initial_state])
-    Process.register(pid, @name)
-    pid
+    GenServer.start(__MODULE__, %State{}, name: @name)
   end
 
   def create_pledge(name, amount) do
-    send @name, {self(), :create_pledge, name, amount}
-
-    receive do {:response, status} -> status end
+    GenServer.call @name, {:create_pledge, name, amount}
   end
 
   def recent_pledges do
-    send @name, {self(), :recent_pledges}
-
-    receive do {:response, pledges} -> pledges end
+    GenServer.call @name, :recent_pledges
   end
 
   def total_pledged do
-    send @name, {self(), :total_pledged}
-
-    receive do {:response, total} -> total end
+    GenServer.call @name, :total_pledged
   end
 
-  # Server
-  def listen_loop(state) do
-    receive do
-      {sender, :create_pledge, name, amount} ->
-        {:ok, id} = send_pledge_to_service(name, amount)
-        most_recent_pledges = Enum.take(state, 2)
-        new_state = [ {name, amount} | most_recent_pledges ]
-        send sender, {:response, id}
-        listen_loop(new_state)
-      {sender, :recent_pledges} ->
-        send sender, {:response, state}
-        listen_loop(state)
-      {sender, :total_pledged} ->
-        total = Enum.map(state, &elem(&1, 1)) |> Enum.sum
-        send sender, {:response, total}
-        listen_loop(state)
-      unexpected ->
-        IO.puts "Unexpected message: #{inspect unexpected}"
-        listen_loop(state)
-    end
+  def clear do
+    GenServer.cast @name, :clear
+  end
+
+  def set_cache_size(size) do
+    GenServer.cast @name, {:set_cache_size, size}
+  end
+
+  # Server callbacks
+
+  def init(state) do # NOTE: GenServer.start will block until init is returned
+    pledges = fetch_pledges()
+    new_state = %{state | pledges: pledges}
+    {:ok, new_state}
+  end
+
+  def handle_cast(:clear, state) do
+    {:noreply, %{ state | pledges: []}}
+  end
+
+  def handle_cast({:set_cache_size, size}, state) do
+    new_state = %{state | cache_size: size}
+    {:noreply, new_state}
+  end
+
+  def handle_call({:create_pledge, name, amount}, _from, state) do
+    {:ok, id} = send_pledge_to_service(name, amount)
+    most_recent_pledges = Enum.take(state.pledges, state.cache_size - 1)
+    cached_pledges = [ {name, amount} | most_recent_pledges ]
+    new_state = %{ state | pledges: cached_pledges}
+    {:reply, id, new_state}
+  end
+
+  def handle_call(:recent_pledges, _from, state) do
+    {:reply, state.pledges, state}
+  end
+
+  def handle_call(:total_pledged, _from, state) do
+    total = Enum.map(state.pledges, &elem(&1, 1)) |> Enum.sum
+    {:reply, total, state}
+  end
+
+  def handle_info(message, state) do # handles unexpected messages and more...
+    IO.puts "Can't touch this! #{inspect message}"
+    {:noreply, state}
   end
 
   defp send_pledge_to_service(_name, _amount) do
     {:ok, "pledge-#{:rand.uniform(1000)}"}
   end
+
+  defp fetch_pledges do # pretend they are coming from an external service
+    [ {"Wilma", 55}, {"Fred", 65} ]
+  end
 end
 
-#alias Tabby.PledgeServer
-#
-#pid = PledgeServer.start()
-#
-#send pid, {:stop, "Hammertime"}
-#
-#IO.inspect PledgeServer.create_pledge("larry", 10)
-#IO.inspect PledgeServer.create_pledge("Mark", 20)
-#IO.inspect PledgeServer.create_pledge("Jon", 30)
-#IO.inspect PledgeServer.create_pledge("Gary", 40)
-#IO.inspect PledgeServer.create_pledge("Owen", 50)
-#
-#IO.inspect PledgeServer.recent_pledges()
-#
-#IO.inspect PledgeServer.total_pledged()
-#
-#IO.inspect Process.info(pid, :messages)
+alias Tabby.PledgeServer
+
+{:ok, pid} = PledgeServer.start()
+
+send pid, {:stop, "Hammertime"}
+
+PledgeServer.set_cache_size(4)
+IO.inspect PledgeServer.create_pledge("larry", 10)
+PledgeServer.clear()
+IO.inspect PledgeServer.create_pledge("Mark", 20)
+IO.inspect PledgeServer.create_pledge("Jon", 30)
+IO.inspect PledgeServer.create_pledge("Gary", 40)
+IO.inspect PledgeServer.create_pledge("Owen", 50)
+
+IO.inspect PledgeServer.recent_pledges()
+
+IO.inspect PledgeServer.total_pledged()
+
+IO.inspect Process.info(pid, :messages)
