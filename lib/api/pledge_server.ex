@@ -1,16 +1,25 @@
 defmodule Tabby.PledgeServer do
   @name :pledge_server
 
-  use GenServer # Server process behaves like other GenServer processes
+  use GenServer, restart: :temporary # Server process behaves like other GenServer processes
 
   defmodule State do
     defstruct cache_size: 3, pledges: []
   end
+
+#  def child_spec(arg) do  # for customization. This function gets automatically injected and called when Supervisor boots up
+#    %{
+#      id: Tabby.PledgeServer,
+#      restart: :temporary,
+#      shutdown: 5000,
+#      start: {Tabby.PledgeServer, :start_link, [[]]}
+#    }
+#  end
   # Client interface
 
-  def start do
+  def start_link(_args) do
     IO.puts "Starting the pledge server..."
-    GenServer.start(__MODULE__, %State{}, name: @name)
+    GenServer.start_link(__MODULE__, %State{}, name: @name)
   end
 
   def create_pledge(name, amount) do
@@ -81,22 +90,22 @@ defmodule Tabby.PledgeServer do
   end
 end
 
-alias Tabby.PledgeServer
-
-{:ok, pid} = PledgeServer.start()
-
-send pid, {:stop, "Hammertime"}
-
-PledgeServer.set_cache_size(4)
-IO.inspect PledgeServer.create_pledge("larry", 10)
-PledgeServer.clear()
-IO.inspect PledgeServer.create_pledge("Mark", 20)
-IO.inspect PledgeServer.create_pledge("Jon", 30)
-IO.inspect PledgeServer.create_pledge("Gary", 40)
-IO.inspect PledgeServer.create_pledge("Owen", 50)
-
-IO.inspect PledgeServer.recent_pledges()
-
-IO.inspect PledgeServer.total_pledged()
-
-IO.inspect Process.info(pid, :messages)
+#alias Tabby.PledgeServer
+#
+#{:ok, pid} = PledgeServer.start()
+#
+#send pid, {:stop, "Hammertime"}
+#
+#PledgeServer.set_cache_size(4)
+#IO.inspect PledgeServer.create_pledge("larry", 10)
+#PledgeServer.clear()
+#IO.inspect PledgeServer.create_pledge("Mark", 20)
+#IO.inspect PledgeServer.create_pledge("Jon", 30)
+#IO.inspect PledgeServer.create_pledge("Gary", 40)
+#IO.inspect PledgeServer.create_pledge("Owen", 50)
+#
+#IO.inspect PledgeServer.recent_pledges()
+#
+#IO.inspect PledgeServer.total_pledged()
+#
+#IO.inspect Process.info(pid, :messages)

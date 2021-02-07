@@ -1,6 +1,6 @@
 # Tabby
 
-**TODO: Add description**
+**Basic http server utilizing Elixir best practices.**
 
 ## Installation
 

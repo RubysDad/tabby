@@ -1,18 +1,8 @@
 defmodule Tabby do
-  @moduledoc """
-  Documentation for `Tabby`.
-  """
+  use Application
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Tabby.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def start(_type, _args) do  # this will be invoked when the application starts
+    IO.puts "Starting the application..."
+    Tabby.Supervisor.start_link
   end
 end

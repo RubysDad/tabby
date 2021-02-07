@@ -5,6 +5,7 @@ defmodule Tabby.MixProject do
     [
       app: :tabby,
       version: "0.1.0",
+      description: "A Http Server",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -14,7 +15,9 @@ defmodule Tabby.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :eex]
+      extra_applications: [:logger, :eex],
+      mod: {Tabby, []}, # mod specifies the callback module to be invoked when the app has started
+      env: [port: 3000] # going to add key-value pair to app environment
     ]
   end
 

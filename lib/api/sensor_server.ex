@@ -1,13 +1,14 @@
 defmodule Tabby.SensorServer do
   @name :sensor_server
-  @refresh_interval :timer.seconds(5)
+  @refresh_interval :timer.minutes(60) # :timer.seconds(5)
 
   use GenServer
 
   # Client Interface
 
-  def start do
-    GenServer.start(__MODULE__, %{}, name: @name)
+  def start_link(interval) do
+    IO.puts "Starting the sensor server with #{interval} min refresh..."
+    GenServer.start_link(__MODULE__, %{}, name: @name)
   end
 
   def get_sensor_data do
@@ -17,15 +18,15 @@ defmodule Tabby.SensorServer do
   # Server Callbacks
 
   def init(_state) do
-    initial_state = run_tasks_to_get_sensor_data
-    schedule_refresh
+    initial_state = run_tasks_to_get_sensor_data()
+    schedule_refresh()
     {:ok, initial_state}
   end
 
   def handle_info(:refresh, _state) do
     IO.puts "Refreshing the cache..."
-    new_state = run_tasks_to_get_sensor_data
-    schedule_refresh
+    new_state = run_tasks_to_get_sensor_data()
+    schedule_refresh()
     {:noreply, new_state}
   end
 

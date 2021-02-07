@@ -28,12 +28,12 @@ defmodule Tabby.BearController do
     render(conv, "show.eex", bear: bear)
   end
 
-  def create(conv, %{"name" => name, "type" => type} = params) do
+  def create(conv, %{"name" => name, "type" => type} = _params) do
     %{ conv | status: 201, resp_body: "Created a #{type} bear named #{name}!"}
   end
 
   def destroy(conv, %{"id" => id}) do
-    bear = Wildthings.get_bear(id)
+    Wildthings.get_bear(id)
     %{ conv | status: 204 }
   end
 end

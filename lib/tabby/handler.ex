@@ -8,8 +8,6 @@ defmodule Tabby.Handler do
   alias Tabby.Conv
   alias Tabby.BearController
   alias Tabby.PledgeController
-  alias Tabby.VideoCam
-  alias Tabby.Tracker
 
   @doc "Transforms the request into a response"
   def handle(request) do
@@ -37,7 +35,7 @@ defmodule Tabby.Handler do
     %{ conv | status: 200, resp_body: inspect sensor_data }
   end
 
-  def route(%Conv{ method: "GET", path: "/kaboom" } = conv) do
+  def route(%Conv{ method: "GET", path: "/kaboom" } = _conv) do
     raise "Kaboom!"
   end
 
@@ -60,37 +58,6 @@ defmodule Tabby.Handler do
     |> File.read
     |> handle_file(conv)
   end
-
-  # multi-clause solution
-  def handle_file({:ok, content}, conv) do
-    %{ conv | status: 200, resp_body: content}
-  end
-
-  def handle_file({:error, :enoent}, conv) do
-    %{ conv | status: 404, resp_body: "File not found"}
-  end
-
-  def handle_file({:error, reason}, conv) do
-    %{ conv | status: 500, resp_body: "File error #{reason}"}
-  end
-
-  # case solution
-#  def route(%{method: "GET", path: "/about"} = conv) do
-#    file =
-#      Path.expand("../../pages", __DIR__)
-#    |> Path.join("about.html")
-#
-#    case File.read("lib/pages/about.html") do
-#      {:ok, content} ->
-#        %{ conv | status: 200, resp_body: content}
-#
-#      {:error, :enoent} ->
-#        %{ conv | status: 404, resp_body: "File not found"}
-#
-#      {:error, reason} ->
-#        %{ conv | status: 500, resp_body: "File error #{reason}"}
-#    end
-#  end
 
   def route(%Conv{method: "GET", path: "/api/bears"} = conv) do
     Tabby.Api.BearController.index(conv)
@@ -121,6 +88,37 @@ defmodule Tabby.Handler do
 
   def route(%Conv{ path: path } = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
+  end
+
+  # case solution
+#  def route(%{method: "GET", path: "/about"} = conv) do
+#    file =
+#      Path.expand("../../pages", __DIR__)
+#    |> Path.join("about.html")
+#
+#    case File.read("lib/pages/about.html") do
+#      {:ok, content} ->
+#        %{ conv | status: 200, resp_body: content}
+#
+#      {:error, :enoent} ->
+#        %{ conv | status: 404, resp_body: "File not found"}
+#
+#      {:error, reason} ->
+#        %{ conv | status: 500, resp_body: "File error #{reason}"}
+#    end
+#  end
+
+  # multi-clause solution
+  def handle_file({:ok, content}, conv) do
+    %{ conv | status: 200, resp_body: content}
+  end
+
+  def handle_file({:error, :enoent}, conv) do
+    %{ conv | status: 404, resp_body: "File not found"}
+  end
+
+  def handle_file({:error, reason}, conv) do
+    %{ conv | status: 500, resp_body: "File error #{reason}"}
   end
 
   def format_response(%Conv{} = conv) do
